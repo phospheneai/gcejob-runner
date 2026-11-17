@@ -1,5 +1,11 @@
 # gcejob
 
+[![PyPI](https://img.shields.io/pypi/v/gcejob)](https://pypi.org/project/gcejob/)
+
+```
+pip install gcejob
+```
+
 Run a script or a container on a short-lived Google Cloud VM. Logs stream back, outputs go to
 Cloud Storage, and the VM and its disk are deleted when the job ends. You pay only while it runs.
 
@@ -48,11 +54,13 @@ You need:
    on the service account.
 6. **GPU quota and free capacity**, if you use GPUs.
 
-Then:
+Then install from [PyPI](https://pypi.org/project/gcejob/) and log in:
 ```
-pip install -e .
+pip install gcejob
 gcloud auth application-default login
 ```
+
+From a source checkout, use `pip install -e .` instead.
 
 ## Run a script
 
