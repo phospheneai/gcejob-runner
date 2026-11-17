@@ -1,4 +1,4 @@
-"""gcejob: training and evaluation jobs on ephemeral Google Cloud VMs."""
+"""gcejob: run training and evaluation jobs on ephemeral Google Cloud VMs."""
 
 from gcejob.job import Job, JobError, StartupTimeout
 from gcejob.runs import ContainerRun, ScriptRun, configure
