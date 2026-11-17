@@ -22,12 +22,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "pydantic>=2.5",
-    "pyyaml>=6",
-    "typer>=0.12",
-    "google-cloud-batch>=0.17",
-    "google-cloud-logging>=3.9",
-    "google-cloud-storage>=2.14",
+    "pydantic>=2.5,<3",
+    "pyyaml>=6,<7",
+    "typer>=0.12,<1",
+    "google-cloud-batch>=0.17,<1",
+    "google-cloud-logging>=3.9,<4",
+    "google-cloud-storage>=2.14,<4",
 ]
 
 [project.optional-dependencies]
