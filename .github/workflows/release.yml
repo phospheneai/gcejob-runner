@@ -1,0 +1,80 @@
+name: Release
+
+# On every push to main that changes the package source: test, bump the patch
+# version, tag it, and publish to PyPI.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/gcejob/**"
+  workflow_dispatch:
+
+# One release at a time, so two quick merges can't race on the version number.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # push the version bump commit and the tag
+
+jobs:
+  release:
+    # Safety net against loops: never run for the bot's own bump commit.
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pytest -q
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          f=src/gcejob/__init__.py
+          cur=$(sed -nE 's/^__version__ = "([0-9]+\.[0-9]+\.[0-9]+)"$/\1/p' "$f")
+          [ -n "$cur" ] || { echo "version not found in $f"; exit 1; }
+          IFS=. read -r maj min pat <<< "$cur"
+          new="$maj.$min.$((pat + 1))"
+          if git rev-parse -q --verify "refs/tags/$new" >/dev/null; then
+            echo "tag $new already exists"; exit 1
+          fi
+          sed -i -E "s/^__version__ = \".*\"$/__version__ = \"$new\"/" "$f"
+          echo "version=$new" >> "$GITHUB_OUTPUT"
+          echo "Bumping $cur -> $new"
+
+      - name: Build
+        run: |
+          pip install build twine
+          python -m build
+          twine check --strict dist/*
+
+      - name: Commit and tag
+        run: |
+          v=${{ steps.bump.outputs.version }}
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/gcejob/__init__.py
+          git commit -m "chore: release $v [skip ci]"
+          git tag -a "$v" -m "gcejob $v"
+          git push origin HEAD:main "$v"
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload --skip-existing dist/*
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ steps.bump.outputs.version }}" dist/* --generate-notes --title "${{ steps.bump.outputs.version }}"

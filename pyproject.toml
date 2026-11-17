@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gcejob"
-version = "0.0.1"
+dynamic = ["version"]
 description = "Training and evaluation jobs on ephemeral Google Cloud VMs (Cloud Batch backend)."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -40,6 +40,9 @@ Issues = "https://github.com/phospheneai/gcejob-runner/issues"
 
 [project.scripts]
 gcejob = "gcejob.cli:app"
+
+[tool.hatch.version]
+path = "src/gcejob/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gcejob"]
