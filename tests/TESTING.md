@@ -28,7 +28,16 @@ All on small CPU VMs (`e2-small`, 30 GB disk, on-demand, `us-west1`).
 | `status`, `logs`, `attach` by job id | Works |
 | `StartupTimeout` cancels a job that never reaches `RUNNING` | Works |
 | `gcejob cleanup --stuck` (dry run, then `--yes`) | Works |
+| Live log streaming while the job runs (`wait_and_stream`) | Works, but delayed (see below) |
 | Nothing left behind (jobs, VMs, disks) after each run | Confirmed |
+
+**Log streaming (2026-11-17, `e2-standard-2`, default 100 GB disk, 224 s total):** the job printed one
+line every 15 s for about 2 minutes. Lines appeared on the laptop while the job was `RUNNING`, about
+10 s before `SUCCEEDED`, so they are not held until the end. They arrived in pairs, 15 to 45 s after
+they were printed, and the last lines came at the end of the job. This is Cloud Logging ingestion
+delay plus the polling interval, so treat the stream as near-live, not instant. VM boot (`STARTING`
+to `RUNNING`) took about 90 s. A harmless `No project ID could be determined` warning from the Google
+auth library appears unless `GOOGLE_CLOUD_PROJECT` is set.
 
 Bugs these runs found and fixed: scripts need a `#!/bin/bash` first line; the Batch list filter needs
 the label value quoted; the boot disk must be at least 30 GB; the VM image has no pip; API quota must
