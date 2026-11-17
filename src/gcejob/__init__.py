@@ -10,4 +10,4 @@ __all__ = [
     "ScriptRun", "StartupTimeout", "configure",
 ]
 # Bumped automatically by .github/workflows/release.yml; do not edit for patch releases.
-__version__ = "0.0.3"
+__version__ = "0.0.4"
