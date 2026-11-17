@@ -111,14 +111,20 @@ def _staging_prefix(bucket: str | None) -> str | None:
 
 
 def _pip_setup(requirements: list[str] | None, on_host: bool) -> str | None:
-    lines = []
-    if on_host:
-        # isolated env on the VM; falls back to system python if venv isn't available
-        lines.append("if python3 -m venv /job/venv; then . /job/venv/bin/activate; fi")
-    if requirements:
-        py = "python3" if on_host else "python"
-        lines.append(f"{py} -m pip install -q " + " ".join(shlex.quote(r) for r in requirements))
-    return "\n".join(lines) or None
+    if not requirements:
+        return None
+    pkgs = " ".join(shlex.quote(r) for r in requirements)
+    if not on_host:  # inside a container image: pip is already there
+        return f"python -m pip install -q {pkgs}"
+    # On the VM: the Batch image has no pip, so install it. The VM is deleted after the job, so
+    # installing into the system Python is fine (Debian needs --break-system-packages for that).
+    return "\n".join([
+        "python3 -m pip --version >/dev/null 2>&1 || {",
+        "  apt-get update -qq",
+        "  DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends python3-pip",
+        "}",
+        f"python3 -m pip install -q --break-system-packages {pkgs}",
+    ])
 
 
 _OPTION_DEFAULTS: dict[str, Any] = {
@@ -268,7 +274,7 @@ class _Run:
 class ScriptRun(_Run):
     """Run a local Python script.
 
-    Without `image` the script runs directly on the VM in a fresh virtualenv, with `requirements`
+    Without `image` the script runs directly on the VM, with `requirements`
     pip-installed first. With `image` it runs inside that container.
     """
 

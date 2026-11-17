@@ -67,7 +67,8 @@ def test_script_run_on_host(script, capsys):
     assert s.name == "my-finetune-1"
     assert s.image is None and s.code == str(script.parent)
     assert s.command == "python3 train.py" and s.args == ["--epochs", "5"]
-    assert "python3 -m pip install -q torch==2.4 transformers" in s.setup and "venv" in s.setup
+    assert "python3 -m pip install -q --break-system-packages torch==2.4 transformers" in s.setup
+    assert "apt-get install" in s.setup and "venv" not in s.setup
     assert s.machine == "g2-standard-4" and s.install_gpu_drivers
     assert s.staging == "gs://bkt/gcejob/staging"
     assert s.service_account == "sa@proj.iam.gserviceaccount.com"
@@ -223,3 +224,9 @@ def test_long_spot_wait_is_just_startup_timeout():
     gcejob.ContainerRun("x", image="i", backend=be).start(
         provisioning="spot", startup_timeout="6h", wait=False)
     assert be.spec.startup_timeout_seconds == 6 * 3600
+
+
+def test_no_requirements_means_no_setup_on_the_vm(script):
+    be = Recorder()
+    gcejob.ScriptRun("t", script=str(script), backend=be).start(wait=False)
+    assert be.spec.setup is None and be.spec.command == "python3 train.py"

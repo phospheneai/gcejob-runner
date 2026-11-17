@@ -1,6 +1,6 @@
 # gcejob API reference
 
-Version 0.1. For setup, prerequisites and examples, see the [README](../README.md) and the [examples](../examples/EXAMPLE_USAGE.md).
+Version 0.0.1. For setup, prerequisites and examples, see the [README](../README.md) and the [examples](../examples/EXAMPLE_USAGE.md).
 
 ```python
 import gcejob
@@ -57,7 +57,7 @@ ScriptRun(name, script, image=None, requirements=None, source_dir=None, *,
 |---|---|
 | `name` | Run name. Converted to a valid id: lowercase, hyphens, max 42 chars. A timestamp is appended for uniqueness. |
 | `script` | Path to your script. Raises `FileNotFoundError` if it doesn't exist. |
-| `image` | Optional container image to run the script in. Without it the script runs directly on the VM in a fresh virtualenv. |
+| `image` | Optional container image to run the script in. Without it the script runs directly on the VM. |
 | `requirements` | List of pip requirements, installed before the script runs. |
 | `source_dir` | Folder to upload. Default: the script's folder. The script must be inside it. Archives over 500 MB are rejected. |
 | `project`, `region`, `staging_bucket`, `labels` | Override the `configure()` defaults for this run. |

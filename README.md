@@ -155,12 +155,12 @@ Commands that take a job id need `--project` and `--region` (or `GCEJOB_PROJECT`
 | `capacity` in `gcejob status` | Google has no free machines of that type in the zone. Retry later or try another region. |
 | `PERMISSION_DENIED` on submit | Grant yourself `batch.jobsEditor` and `serviceAccountUser`. |
 | `Disk cannot be smaller than the chosen image` | Use `disk_gb` of 30 or more. |
-| `Quota exceeded ... project_number:764086051850` | Run `gcloud auth application-default set-quota-project <your-project>`. |
+| `Quota exceeded ... project_number:<number>` | Run `gcloud auth application-default set-quota-project <your-project>`. |
 | Missing `/gcs/<bucket>` or `/job/input/...` | The bucket isn't in `buckets`, `inputs` or `output_dir`, or the service account can't read it. |
 
 ## Status
 
-Version 0.1, Cloud Batch only. Checked on real GCP: CPU jobs, code upload, the startup timeout.
+Version 0.0.1 (early release), Cloud Batch only. Checked on real GCP: CPU jobs, code upload, the startup timeout.
 Still being validated or not yet tested on real hardware: bucket mounts, container jobs, GPU jobs,
 and Spot retry.
 

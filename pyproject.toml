@@ -4,11 +4,23 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gcejob"
-version = "0.1.0"
+version = "0.0.1"
 description = "Training and evaluation jobs on ephemeral Google Cloud VMs (Cloud Batch backend)."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
+authors = [{ name = "Phosphene AI" }]
+keywords = ["gcp", "google-cloud", "batch", "gce", "training", "gpu", "mlops"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "pydantic>=2.5",
     "pyyaml>=6",
@@ -20,6 +32,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.urls]
+Homepage = "https://github.com/phospheneai/gcejob-runner"
+Source = "https://github.com/phospheneai/gcejob-runner"
+Issues = "https://github.com/phospheneai/gcejob-runner/issues"
 
 [project.scripts]
 gcejob = "gcejob.cli:app"
