@@ -14,7 +14,7 @@ STAGING_BUCKET = "gs://your-bucket"
 SERVICE_ACCOUNT = "sa-gcejob-runner@your-project-id.iam.gserviceaccount.com"
 ```
 
-Setup needed first (APIs, service account, roles): see the [README](../README.md#prerequisites).
+Setup needed first (APIs, service account, roles): see the [README](../README.md#setup).
 
 ## 2. Run
 

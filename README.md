@@ -1,10 +1,7 @@
 # gcejob
 
 [![PyPI](https://img.shields.io/pypi/v/gcejob)](https://pypi.org/project/gcejob/)
-
-```
-pip install gcejob
-```
+[![License](https://img.shields.io/pypi/l/gcejob)](https://github.com/phospheneai/gcejob-runner/blob/main/LICENSE)
 
 Run a script or a container on a short-lived Google Cloud VM. Logs stream back, outputs go to
 Cloud Storage, and the VM and its disk are deleted when the job ends. You pay only while it runs.
@@ -12,8 +9,39 @@ Cloud Storage, and the VM and its disk are deleted when the job ends. You pay on
 Good for training and evaluation jobs that need machine shapes (like small GPUs) that managed
 training services don't offer.
 
-- [API reference](docs/API.md)
-- [Run the example](examples/EXAMPLE_USAGE.md)
+- [API reference](https://github.com/phospheneai/gcejob-runner/blob/main/docs/API.md)
+- [Run the example](https://github.com/phospheneai/gcejob-runner/blob/main/examples/EXAMPLE_USAGE.md)
+
+## Quickstart
+
+```
+pip install gcejob
+gcloud auth application-default login
+```
+
+```python
+import gcejob
+
+gcejob.configure(project="my-project", region="us-west1",
+                 staging_bucket="gs://my-bucket",
+                 service_account="sa-gcejob-runner@my-project.iam.gserviceaccount.com")
+
+gcejob.ScriptRun("hello", script="train.py").start(machine="e2-standard-2")
+```
+
+This needs a GCP project, a service account and a bucket. See [Setup](#setup) first.
+
+Example output:
+
+```
+submitted projects/my-project/locations/us-west1/jobs/hello-20261117-104509
+hello-20261117-104509: QUEUED
+hello-20261117-104509: STARTING
+hello-20261117-104509: RUNNING
+hello-20261117-104509: SUCCEEDED
+<your script's output>
+final state: SUCCEEDED
+```
 
 ## How it works
 
@@ -54,13 +82,8 @@ You need:
    on the service account.
 6. **GPU quota and free capacity**, if you use GPUs.
 
-Then install from [PyPI](https://pypi.org/project/gcejob/) and log in:
-```
-pip install gcejob
-gcloud auth application-default login
-```
-
-From a source checkout, use `pip install -e .` instead.
+Once that is done, install and log in as shown in the [Quickstart](#quickstart). From a source
+checkout, use `pip install -e .` instead of `pip install gcejob`.
 
 ## Run a script
 
@@ -103,6 +126,22 @@ Buckets are mounted as files. Your code reads and writes them like normal folder
 | `/job/checkpoints` | Saved to `<output_dir>/checkpoints` |
 
 ## Command line
+
+Describe a job in YAML and run it without writing Python:
+
+```yaml
+# job.yaml
+name: cpu-smoke
+project: my-project
+region: us-west1
+service_account: sa-gcejob-runner@my-project.iam.gserviceaccount.com
+machine: e2-standard-4
+max_run: 5m
+command: |
+  echo CPU_SMOKE_OK
+```
+
+More in [examples/](https://github.com/phospheneai/gcejob-runner/blob/main/examples/).
 
 ```
 gcejob run job.yaml          # run a job from a YAML file
@@ -168,9 +207,9 @@ Commands that take a job id need `--project` and `--region` (or `GCEJOB_PROJECT`
 
 ## Status
 
-Version 0.0.1 (early release), Cloud Batch only. Checked on real GCP: CPU jobs, code upload, the startup timeout.
-Still being validated or not yet tested on real hardware: bucket mounts, container jobs, GPU jobs,
-and Spot retry.
+**Experimental (0.0.1), Cloud Batch only.** Verified on real GCP: CPU jobs, code upload and the
+startup timeout. Not yet verified on real hardware: bucket mounts, container jobs, GPU jobs and
+Spot retry. Expect rough edges and report them as issues.
 
 ## Development
 
@@ -178,3 +217,7 @@ and Spot retry.
 pip install -e ".[dev]"
 pytest
 ```
+
+## License
+
+Apache-2.0. See [LICENSE](https://github.com/phospheneai/gcejob-runner/blob/main/LICENSE).
