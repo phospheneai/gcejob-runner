@@ -1,0 +1,27 @@
+# Example training job: local code + GCS data, L4 GPU, outputs and checkpoints back to GCS.
+name: finetune-v1
+project: your-project-id
+region: us-west1
+service_account: sa-gcejob-runner@your-project-id.iam.gserviceaccount.com
+
+machine: g2-standard-4          # 1x NVIDIA L4. g4-standard-6 = 1/8 RTX PRO 6000 slice (capacity permitting)
+provisioning: standard          # standard | spot | flex_start
+disk_gb: 200
+max_run: 10h
+startup_timeout: 20m            # driver install is slow; this is wait-until-RUNNING
+
+code: ./my_project              # uploaded to `staging`, unpacked at /job/code
+staging: gs://your-bucket/gcejob/staging/
+setup: pip install -r requirements.txt
+command: python train.py --epochs 5
+
+inputs:
+  data: gs://your-bucket/datasets/v1/   # -> /job/input/data
+output: gs://your-bucket/runs/finetune-v1/     # -> /job/output
+checkpoints: gs://your-bucket/runs/finetune-v1/ckpt/  # -> /job/checkpoints
+
+env:
+  LR: "0.0003"
+
+labels:
+  team: research

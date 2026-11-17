@@ -1,0 +1,17 @@
+# Replace the your-* placeholders first.
+# Cheapest end-to-end check: CPU VM, no GPU, no buckets. Costs well under a cent.
+name: cpu-smoke
+project: your-project-id
+region: us-west1
+zones: [us-west1-a, us-west1-c]
+service_account: sa-gcejob-runner@your-project-id.iam.gserviceaccount.com
+
+machine: e2-standard-4
+provisioning: standard
+max_run: 5m
+startup_timeout: 10m
+
+command: |
+  echo CPU_SMOKE_OK
+  hostname
+  echo "name=$GCEJOB_NAME job=$GCEJOB_JOB_ID"
