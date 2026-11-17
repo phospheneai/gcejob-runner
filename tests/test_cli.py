@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -41,4 +42,5 @@ def test_status_requires_project():
 
 def test_cleanup_has_stuck_flag():
     r = runner.invoke(app, ["cleanup", "--help"])
-    assert "--stuck" in r.output
+    # CI forces colour, which splits "--stuck" with ANSI codes; strip them.
+    assert "--stuck" in re.sub(r"\x1b\[[0-9;]*m", "", r.output)
