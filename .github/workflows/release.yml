@@ -61,11 +61,26 @@ jobs:
       - name: Commit and tag
         run: |
           v=${{ steps.bump.outputs.version }}
+          prev=$(git describe --tags --abbrev=0 2>/dev/null || true)
+
+          # Release notes = commit subjects since the previous tag (bot commits excluded).
+          {
+            echo "## What's changed"
+            echo
+            git log ${prev:+$prev..HEAD} --no-merges --invert-grep --grep='^chore: release' \
+              --pretty='- %s (%h)'
+            if [ -n "$prev" ]; then
+              echo
+              echo "**Full changelog:** ${{ github.server_url }}/${{ github.repository }}/compare/$prev...$v"
+            fi
+          } > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/gcejob/__init__.py
           git commit -m "chore: release $v [skip ci]"
-          git tag -a "$v" -m "gcejob $v"
+          git tag -a "$v" -m "gcejob $v" -m "$(cat RELEASE_NOTES.md)"
           git push origin HEAD:main "$v"
 
       - name: Publish to PyPI
@@ -77,4 +92,4 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ steps.bump.outputs.version }}" dist/* --generate-notes --title "${{ steps.bump.outputs.version }}"
+        run: gh release create "${{ steps.bump.outputs.version }}" dist/* --notes-file RELEASE_NOTES.md --title "${{ steps.bump.outputs.version }}"
