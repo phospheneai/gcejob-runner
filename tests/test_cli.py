@@ -44,3 +44,20 @@ def test_cleanup_has_stuck_flag():
     r = runner.invoke(app, ["cleanup", "--help"])
     # CI forces colour, which splits "--stuck" with ANSI codes; strip them.
     assert "--stuck" in re.sub(r"\x1b\[[0-9;]*m", "", r.output)
+
+
+def test_list_shows_id_and_name(monkeypatch):
+    from gcejob import cli
+    from gcejob.states import JobInfo, JobState
+
+    class B:
+        def list(self):
+            return [JobInfo("hello-20261117-104509", JobState.RUNNING, labels={"gcejob-name": "hello"}),
+                    JobInfo("old-1", JobState.SUCCEEDED)]
+
+    monkeypatch.setattr(cli, "_backend", lambda project, region: B())
+    r = runner.invoke(app, ["list", "--project", "p", "--region", "r"])
+    assert r.exit_code == 0
+    assert "JOB ID" in r.output and "NAME" in r.output
+    assert "hello-20261117-104509" in r.output and "hello" in r.output and "RUNNING" in r.output
+    assert "old-1" in r.output and "-" in r.output

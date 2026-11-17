@@ -92,9 +92,16 @@ def cancel(job_id: str, project: str = ProjectOpt, region: str = RegionOpt):
 
 @app.command("list")
 def list_jobs(project: str = ProjectOpt, region: str = RegionOpt):
-    """List gcejob jobs in a region."""
-    for j in _backend(project, region).list():
-        typer.echo(f"{j.job_id}\t{j.state.value}\t{j.reason}")
+    """List gcejob jobs in a region: job id, name, state and reason."""
+    jobs = _backend(project, region).list()
+    rows = [(j.job_id, j.labels.get("gcejob-name", "-"), j.state.value, j.reason or "") for j in jobs]
+    if not rows:
+        typer.echo("no jobs")
+        return
+    header = ("JOB ID", "NAME", "STATE", "REASON")
+    widths = [max(len(r[i]) for r in [header, *rows]) for i in range(3)]
+    for r in [header, *rows]:
+        typer.echo("  ".join(r[i].ljust(widths[i]) for i in range(3)) + "  " + r[3])
 
 
 @app.command()

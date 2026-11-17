@@ -276,7 +276,7 @@ dict without calling GCP; use it to inspect exactly what will be created.
 | `gcejob status JOB_ID` | Print state, and `kind: reason` if known. |
 | `gcejob logs JOB_ID [-f]` | Print or follow logs. |
 | `gcejob cancel JOB_ID` | Cancel a job. |
-| `gcejob list` | List `gcejob` jobs in the region. |
+| `gcejob list` | List `gcejob` jobs in the region as a table: job id, name, state, reason. |
 | `gcejob cleanup [--older-than 24h] [--include-active] [--stuck] [--yes]` | Delete finished jobs older than the age. `--include-active` also removes queued/running jobs. `--stuck` only cancels jobs still `QUEUED`/`STARTING` after the age (never running or finished ones), safe to schedule. Dry run unless `--yes`. |
 
 Options for commands that take a job id: `--project` (env `GCEJOB_PROJECT`), `--region`

@@ -150,7 +150,7 @@ gcejob run job.yaml          # run a job from a YAML file
 gcejob status <job-id>       # state, and why if it is stuck
 gcejob logs <job-id> -f      # follow logs
 gcejob cancel <job-id>
-gcejob list
+gcejob list                  # job id, name, state
 gcejob cleanup --stuck --older-than 30m --yes    # cancel jobs that never started
 ```
 Commands that take a job id need `--project` and `--region` (or `GCEJOB_PROJECT`, `GCEJOB_REGION`).
