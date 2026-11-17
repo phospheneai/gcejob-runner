@@ -168,7 +168,8 @@ Commands that take a job id need `--project` and `--region` (or `GCEJOB_PROJECT`
 - Every job gets a fresh VM, so nothing carries over between jobs. Save anything you need to
   `/job/output`, `/job/checkpoints` or a bucket.
 - Your script runs as root, in `/job/code`, with bash. The job id is `<name>-<timestamp>`.
-- Logs are printed when the job finishes. To watch them live, use `gcejob logs <job-id> -f`.
+- Logs stream live while the job runs (a few seconds behind, since they go through Cloud Logging).
+  To follow a job from another terminal, use `gcejob logs <job-id> -f`.
 - One VM per job. There is no multi-node training.
 - On Spot, a preempted job is re-run from the start (up to `max_retries`, default 3). Your script
   must resume from its own checkpoints.
@@ -208,8 +209,8 @@ Commands that take a job id need `--project` and `--region` (or `GCEJOB_PROJECT`
 ## Status
 
 **Experimental (0.0.1), Cloud Batch only.** Verified on real GCP: CPU jobs, code upload and the
-startup timeout. Not yet verified on real hardware: bucket mounts, container jobs, GPU jobs and
-Spot retry. Expect rough edges and report them as issues.
+startup timeout. Not yet verified on real hardware: live log streaming, bucket mounts, container
+jobs, GPU jobs and Spot retry. Expect rough edges and report them as issues.
 
 ## Development
 

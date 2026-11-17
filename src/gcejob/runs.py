@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from gcejob.backends import Backend
-from gcejob.job import Job, JobError
+from gcejob.job import Job
 from gcejob.spec import _GPU_FAMILIES, JobSpec
 from gcejob.states import JobInfo, JobState
 
@@ -205,22 +205,13 @@ class _Run:
     def wait(self, show_logs: bool = True) -> JobInfo:
         """Block until the run finishes. Raises JobError / StartupTimeout; prints logs either way."""
         job = self._require_job()
-        try:
-            info = job.wait(on_update=lambda i: log.info("%s: %s %s", job.job_id, i.state.value, i.reason))
-        except JobError:
-            if show_logs:
-                self._print_logs()
-            raise
-        if show_logs:
-            self._print_logs()
-        return info
 
-    def _print_logs(self) -> None:
-        try:
-            for line in self._require_job().logs():
-                print(line)
-        except Exception as err:  # noqa: BLE001 - logs are best-effort
-            log.warning("could not read logs: %s", err)
+        def on_update(i):
+            log.info("%s: %s %s", job.job_id, i.state.value, i.reason)
+
+        if show_logs:
+            return job.wait_and_stream(emit=print, on_update=on_update)
+        return job.wait(on_update=on_update)
 
     def cancel(self) -> None:
         self._require_job().cancel()

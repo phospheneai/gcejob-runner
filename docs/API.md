@@ -113,7 +113,7 @@ Passed to `start()` of `ScriptRun` and `ContainerRun`. An unknown option raises 
 | `startup_timeout` | `"15m"` | Cancel if the job isn't `RUNNING` by then. For Spot, set it to how long you're willing to wait for capacity, e.g. `"6h"`. |
 | `max_retries` | `3` for Spot, `0` otherwise | Re-run the task up to this many times (max 10) if the Spot VM is preempted. Your code failing is never retried. Your script must resume from its own checkpoints. |
 | `wait` | `True` | Wait for completion. `False` returns after submitting. |
-| `show_logs` | `True` | With `wait=True`, print the job logs when it finishes (also on failure). |
+| `show_logs` | `True` | With `wait=True`, stream the job logs live while it runs (a few seconds behind, via Cloud Logging). Also on failure. |
 
 `start()` returns `None`. It raises `JobError` if the job fails, `StartupTimeout` if it never starts,
 and `ValueError` / `TypeError` for invalid options.
@@ -199,6 +199,7 @@ Job.attach(job_id, project, region, backend=None)   # handle for an existing job
 |---|---|
 | `submit()` | Upload code (if any) and submit. Returns the `Job`. |
 | `wait(poll=10.0, on_update=None)` | Poll until finished. Raises `JobError` on failure, `StartupTimeout` (after cancelling) if not `RUNNING` within `startup_timeout`. The timeout only applies until the job has been `RUNNING` once. `on_update(info)` is called on each state change. |
+| `wait_and_stream(emit=print, **wait_kwargs)` | Like `wait()`, but prints log lines live on a background thread. If following the logs fails part-way, the rest is read once at the end without repeats. Raises what `wait()` raises, after the logs are drained. |
 | `run(**wait_kwargs)` | `submit()` then `wait()`. |
 | `refresh()` | Fetch and return the current `JobInfo`. |
 | `state`, `job_id`, `info` | Current state, id, last fetched info. |
@@ -271,7 +272,7 @@ dict without calling GCP; use it to inspect exactly what will be created.
 | Command | Description |
 |---|---|
 | `gcejob validate FILE [--show-config]` | Validate a spec; print the Batch config with `--show-config`. No GCP calls. |
-| `gcejob run FILE [--wait/--no-wait] [--dry-run]` | Submit. By default waits, prints state changes and logs, and exits 1 on failure. `--dry-run` prints the config and exits. |
+| `gcejob run FILE [--wait/--no-wait] [--dry-run]` | Submit. By default waits, prints state changes and streams logs live, and exits 1 on failure. `--dry-run` prints the config and exits. |
 | `gcejob status JOB_ID` | Print state, and `kind: reason` if known. |
 | `gcejob logs JOB_ID [-f]` | Print or follow logs. |
 | `gcejob cancel JOB_ID` | Cancel a job. |

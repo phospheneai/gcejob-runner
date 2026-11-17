@@ -58,21 +58,12 @@ def run(
                    f"  gcejob cleanup --stuck --older-than 30m --yes --project {spec.project} --region {spec.region}")
         raise typer.Exit()
     try:
-        job.wait(on_update=lambda i: typer.echo(f"[{i.state.value}] {i.reason}".rstrip()))
+        job.wait_and_stream(emit=typer.echo,
+                            on_update=lambda i: typer.echo(f"[{i.state.value}] {i.reason}".rstrip()))
     except JobError as err:
         typer.echo(f"ERROR: {err}", err=True)
-        _print_logs(job)
         raise typer.Exit(1) from err
-    _print_logs(job)
     typer.echo(f"done: {job.job_id}")
-
-
-def _print_logs(job: Job) -> None:
-    try:
-        for line in job.logs():
-            typer.echo(line)
-    except Exception as err:  # logs are best-effort
-        typer.echo(f"(could not read logs: {err})", err=True)
 
 
 @app.command()

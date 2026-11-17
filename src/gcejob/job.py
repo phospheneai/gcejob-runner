@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
@@ -97,6 +98,44 @@ class Job:
                     f"job {self.job_id} not RUNNING after {self.spec.startup_timeout}{hint}; cancelled", info
                 )
             sleep(poll)
+
+    def wait_and_stream(
+        self,
+        emit: Callable[[str], None] = print,
+        join_timeout: float = 30.0,
+        **wait_kwargs,
+    ) -> JobInfo:
+        """wait(), printing log lines live while the job runs.
+
+        Logs are followed on a background thread so status polling is unaffected. If following
+        fails part-way, the remaining lines are fetched once at the end. Raises what wait() raises,
+        after the logs have been drained.
+        """
+        printed = 0
+        error: list[BaseException] = []
+
+        def follow() -> None:
+            nonlocal printed
+            try:
+                for line in self.backend.logs(self.job_id, follow=True):
+                    emit(line)
+                    printed += 1
+            except BaseException as err:  # noqa: BLE001 - logs are best-effort
+                error.append(err)
+
+        thread = threading.Thread(target=follow, name=f"gcejob-logs-{self.job_id}", daemon=True)
+        thread.start()
+        try:
+            return self.wait(**wait_kwargs)
+        finally:
+            thread.join(join_timeout)
+            if error:
+                try:  # fall back to a one-shot read, skipping what was already shown
+                    for i, line in enumerate(self.backend.logs(self.job_id)):
+                        if i >= printed:
+                            emit(line)
+                except Exception:  # noqa: BLE001
+                    emit(f"(could not read logs: {error[0]})")
 
     def logs(self, follow: bool = False):
         return self.backend.logs(self.job_id, follow=follow)

@@ -146,3 +146,36 @@ def test_other_batch_errors_are_surfaced_not_hidden():
           "description - Disk cannot be smaller than the chosen image (30.0 GB)."]
     kind, reason = classify_events(ev)
     assert kind == FailureKind.OTHER and "Disk cannot be smaller" in reason
+
+
+def test_wait_and_stream_prints_logs_live_and_returns_info():
+    j = make_job([JobState.RUNNING, JobState.SUCCEEDED])
+    lines = []
+    info = j.submit().wait_and_stream(emit=lines.append, poll=0, sleep=lambda s: None)
+    assert info.state == JobState.SUCCEEDED
+    assert lines == ["line1", "line2"]
+
+
+def test_wait_and_stream_still_shows_logs_when_job_fails():
+    j = make_job([JobState.RUNNING, JobState.FAILED])
+    lines = []
+    with pytest.raises(JobError):
+        j.submit().wait_and_stream(emit=lines.append, poll=0, sleep=lambda s: None)
+    assert lines == ["line1", "line2"]
+
+
+def test_wait_and_stream_falls_back_without_duplicates_when_follow_breaks():
+    j = make_job([JobState.RUNNING, JobState.SUCCEEDED])
+
+    def logs(job_id, follow=False):
+        if follow:
+            def broken():
+                yield "line1"
+                raise RuntimeError("logging api down")
+            return broken()
+        return iter(["line1", "line2", "line3"])
+
+    j.backend.logs = logs
+    lines = []
+    j.submit().wait_and_stream(emit=lines.append, poll=0, sleep=lambda s: None)
+    assert lines == ["line1", "line2", "line3"]
