@@ -9,4 +9,5 @@ __all__ = [
     "ContainerRun", "FailureKind", "Job", "JobError", "JobInfo", "JobSpec", "JobState",
     "ScriptRun", "StartupTimeout", "configure",
 ]
+# Bumped automatically by .github/workflows/release.yml; do not edit for patch releases.
 __version__ = "0.0.1"
