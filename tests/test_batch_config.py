@@ -178,3 +178,20 @@ def test_retries_only_on_preemption():
 def test_no_retries_by_default():
     t = task(build_job_config(spec(), "j"))
     assert t["maxRetryCount"] == 0 and "lifecyclePolicies" not in t
+
+
+def test_scripts_start_with_bash_shebang_because_batch_runs_sh():
+    for kw in ({}, {"buckets": ["b-bucket"]}):
+        text = task(build_job_config(spec(**kw), "j"))["runnables"][0]["script"]["text"]
+        assert text.startswith("#!/bin/bash\nset -euo pipefail")
+
+
+def test_list_filter_quotes_the_label_value():
+    from unittest.mock import MagicMock
+
+    from gcejob.backends.batch import BatchBackend
+
+    client = MagicMock()
+    client.list_jobs.return_value = []
+    BatchBackend("p", "us-west1", client=client).list()
+    assert client.list_jobs.call_args.kwargs["request"]["filter"] == 'labels.gcejob="true"'

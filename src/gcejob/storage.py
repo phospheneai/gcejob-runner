@@ -45,6 +45,8 @@ def upload_code(code_dir: str | Path, staging_uri: str, job_id: str, project: st
                 f"code archive is {size_mb:.0f} MB (limit {MAX_ARCHIVE_MB} MB); "
                 f"point source_dir/code at a smaller folder or put big files in GCS inputs"
             )
-        client = storage.Client(project=project)
+        from gcejob.auth import credentials
+
+        client = storage.Client(project=project, credentials=credentials(project) if project else None)
         client.bucket(bucket_name).blob(object_name).upload_from_filename(str(archive))
     return f"gs://{bucket_name}/{object_name}"

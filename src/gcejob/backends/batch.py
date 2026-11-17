@@ -18,6 +18,7 @@ from gcejob.states import JobInfo, JobState, classify_events
 
 LABEL_MARK = "gcejob"
 MOUNT_ROOT = "/mnt/disks/gcejob"
+SHEBANG = "#!/bin/bash"  # Batch runs scripts with sh unless told otherwise; we need bash
 PREEMPTED_EXIT_CODE = 50001  # Batch reports a preempted Spot VM with this task exit code
 # NOTE: mount options for the Cloud Storage FUSE volume; validated live in the smoke test.
 GCS_MOUNT_OPTIONS = ["-o rw", "-implicit-dirs"]
@@ -51,7 +52,7 @@ def _bucket_mounts(spec: JobSpec, code_uri: str | None) -> dict[str, str]:
 def build_prelude(spec: JobSpec, code_uri: str | None, mounts: dict[str, str]) -> str:
     """Shell that lays out /job/{input,output,checkpoints,code} on top of the bucket mounts."""
     # every mounted bucket is also reachable as /gcs/<bucket>
-    lines = ["set -euo pipefail", "mkdir -p /job/input", f"ln -sfn {MOUNT_ROOT} /gcs"]
+    lines = [SHEBANG, "set -euo pipefail", "mkdir -p /job/input", f"ln -sfn {MOUNT_ROOT} /gcs"]
 
     def target(uri: str) -> str:
         bucket, prefix = split_gcs_uri(uri)
@@ -123,7 +124,7 @@ def build_job_config(spec: JobSpec, job_id: str, code_uri: str | None = None) ->
             container["options"] = "--privileged"
         runnables.append({"container": container})
     else:
-        body = [build_prelude(spec, code_uri, mounts)] if mounts else ["set -euo pipefail"]
+        body = [build_prelude(spec, code_uri, mounts)] if mounts else [SHEBANG, "set -euo pipefail"]
         if spec.setup:
             body.append(spec.setup)
         body.append(spec.script_text)
@@ -195,7 +196,9 @@ class BatchBackend(Backend):
         if self._client is None:
             from google.cloud import batch_v1
 
-            self._client = batch_v1.BatchServiceClient()
+            from gcejob.auth import credentials
+
+            self._client = batch_v1.BatchServiceClient(credentials=credentials(self.project))
         return self._client
 
     @property
@@ -226,7 +229,7 @@ class BatchBackend(Backend):
 
     def list(self, label_filter: dict[str, str] | None = None) -> list[JobInfo]:
         flt = {LABEL_MARK: "true", **(label_filter or {})}
-        expr = " AND ".join(f"labels.{k}={v}" for k, v in flt.items())
+        expr = " AND ".join(f'labels.{k}="{v}"' for k, v in flt.items())
         jobs = self.client.list_jobs(request={"parent": self.parent, "filter": expr})
         return [self._to_info(j) for j in jobs]
 
@@ -254,7 +257,11 @@ class BatchBackend(Backend):
         if self._logging is None:
             from google.cloud import logging as cloud_logging
 
-            self._logging = cloud_logging.Client(project=self.project)
+            from gcejob.auth import credentials
+
+            self._logging = cloud_logging.Client(
+                project=self.project, credentials=credentials(self.project)
+            )
         flt = (
             f'logName="projects/{self.project}/logs/batch_task_logs" '
             f'AND labels.job_uid="{uid}"'
