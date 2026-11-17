@@ -9,6 +9,9 @@ Cloud Storage, and the VM and its disk are deleted when the job ends. You pay on
 Good for training and evaluation jobs that need machine shapes (like small GPUs) that managed
 training services don't offer.
 
+Small by design: about 1,300 lines of Python, no server or daemon, and no cluster to manage. It
+only wraps Google's own client libraries around Cloud Batch.
+
 - [API reference](https://github.com/phospheneai/gcejob-runner/blob/main/docs/API.md)
 - [Run the example](https://github.com/phospheneai/gcejob-runner/blob/main/examples/EXAMPLE_USAGE.md)
 
@@ -207,6 +210,22 @@ Commands that take a job id need `--project` and `--region` (or `GCEJOB_PROJECT`
 | `Disk cannot be smaller than the chosen image` | Use `disk_gb` of 30 or more. |
 | `Quota exceeded ... project_number:<number>` | Run `gcloud auth application-default set-quota-project <your-project>`. |
 | Missing `/gcs/<bucket>` or `/job/input/...` | The bucket isn't in `buckets`, `inputs` or `output_dir`, or the service account can't read it. |
+
+## Footprint
+
+gcejob is a thin layer, so its size is mostly Google's client libraries. Installed into a clean
+virtual environment (pip's own files excluded, measured 2026-11-17):
+
+| Package | Install size |
+|---|---|
+| `google-cloud-batch` alone (raw client) | 73 MB |
+| **gcejob** | **106 MB** |
+| `dstack` (client only) | 121 MB |
+| `google-cloud-aiplatform` (Vertex AI) | 282 MB |
+| `skypilot[gcp]` | 481 MB |
+
+These tools do different things (SkyPilot and dstack also cover other clouds and cluster
+management), so this compares install weight, not features. Sizes change with each release.
 
 ## Status
 
