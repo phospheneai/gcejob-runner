@@ -31,17 +31,19 @@ gcejob.ScriptRun("hello", script="train.py").start(machine="e2-standard-2")
 
 This needs a GCP project, a service account and a bucket. See [Setup](#setup) first.
 
-Example output:
+Example output (your script's output streams in while the job is `RUNNING`):
 
 ```
 submitted projects/my-project/locations/us-west1/jobs/hello-20261117-104509
 hello-20261117-104509: QUEUED
 hello-20261117-104509: STARTING
 hello-20261117-104509: RUNNING
+<your script's output, line by line as it runs>
 hello-20261117-104509: SUCCEEDED
-<your script's output>
-final state: SUCCEEDED
 ```
+
+Status lines and log lines are fetched separately, so the last few log lines can appear just
+before or after `SUCCEEDED`.
 
 ## How it works
 

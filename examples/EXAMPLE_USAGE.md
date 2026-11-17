@@ -29,15 +29,16 @@ submitted projects/your-project-id/locations/us-west1/jobs/hello-cpu-20261117-10
 hello-cpu-20261117-104509: QUEUED
 hello-cpu-20261117-104509: STARTING
 hello-cpu-20261117-104509: RUNNING
-hello-cpu-20261117-104509: SUCCEEDED
 hi from gcejob
 job id : hello-cpu-20261117-104509
 host   : <vm-name>
 python : 3.x.y
+hello-cpu-20261117-104509: SUCCEEDED
 final state: SUCCEEDED
 ```
 
-Takes 1 to 5 minutes. Job id, timestamp and VM name will differ.
+Takes 1 to 5 minutes. Job id, timestamp and VM name will differ. The last log lines can appear
+just before or after `SUCCEEDED`.
 
 ## Same thing with YAML
 
